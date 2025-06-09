@@ -1,0 +1,333 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - azure/*
+      - tests/*
+      - azure-pipelines.yml
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - azure/*
+      - tests/*
+      - azure-pipelines.yml
+
+variables:
+  - group: terraform-secrets
+  - name: terraformVersion
+    value: '1.6.0'
+  - name: vmImage
+    value: 'ubuntu-latest'
+
+stages:
+- stage: Validation
+  displayName: 'Terraform Validation'
+  jobs:
+  - job: ValidateModules
+    displayName: 'Validate Terraform Modules'
+    pool:
+      vmImage: $(vmImage)
+    strategy:
+      matrix:
+        ResourceGroup:
+          modulePath: 'azure/resource_group'
+        VirtualNetworks:
+          modulePath: 'azure/virtual_networks'
+    steps:
+    - checkout: self
+      displayName: 'Checkout Repository'
+
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    - task: Bash@3
+      displayName: 'Terraform Format Check'
+      inputs:
+        targetType: 'inline'
+        script: |
+          terraform fmt -check -recursive
+        workingDirectory: $(modulePath)
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: $(modulePath)
+        backendServiceArm: 'terraform-backend'
+        backendAzureRmResourceGroupName: $(resourceGroupName)
+        backendAzureRmStorageAccountName: $(storageAccountName)
+        backendAzureRmContainerName: $(containerName)
+        backendAzureRmKey: 'terraform.tfstate'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Validate'
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+        workingDirectory: $(modulePath)
+
+    - task: Bash@3
+      displayName: 'Run Terraform Tests'
+      inputs:
+        targetType: 'inline'
+        script: |
+          terraform test
+        workingDirectory: $(modulePath)
+      env:
+        ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+        ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+        ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+        ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+- stage: SecurityScan
+  displayName: 'Security Scanning'
+  dependsOn: Validation
+  jobs:
+  - job: SecurityScan
+    displayName: 'Run Security Scans'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - checkout: self
+      displayName: 'Checkout Repository'
+
+    - task: Bash@3
+      displayName: 'Install Checkov'
+      inputs:
+        targetType: 'inline'
+        script: |
+          pip3 install checkov
+          checkov --version
+
+    - task: Bash@3
+      displayName: 'Run Checkov Security Scan'
+      inputs:
+        targetType: 'inline'
+        script: |
+          checkov -d . --framework terraform --output json --output-file checkov-report.json
+          checkov -d . --framework terraform --output sarif --output-file checkov-report.sarif
+      continueOnError: true
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Checkov Results'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'checkov-report.json'
+        testRunTitle: 'Checkov Security Scan'
+      condition: always()
+
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish Security Scan Results'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'checkov-report.sarif'
+      condition: always()
+
+- stage: TerraformPlan
+  displayName: 'Terraform Plan'
+  dependsOn: [Validation, SecurityScan]
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  - job: PlanModules
+    displayName: 'Plan Terraform Modules'
+    pool:
+      vmImage: $(vmImage)
+    strategy:
+      matrix:
+        ResourceGroup:
+          modulePath: 'azure/resource_group'
+        VirtualNetworks:
+          modulePath: 'azure/virtual_networks'
+    steps:
+    - checkout: self
+      displayName: 'Checkout Repository'
+
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: $(modulePath)
+        backendServiceArm: 'terraform-backend'
+        backendAzureRmResourceGroupName: $(resourceGroupName)
+        backendAzureRmStorageAccountName: $(storageAccountName)
+        backendAzureRmContainerName: $(containerName)
+        backendAzureRmKey: 'terraform.tfstate'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Plan'
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: $(modulePath)
+        environmentServiceNameAzureRM: 'terraform-backend'
+      env:
+        ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+        ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+        ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+        ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+- stage: IntegrationTests
+  displayName: 'Integration Tests'
+  dependsOn: Validation
+  condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/develop'))
+  jobs:
+  - job: IntegrationTests
+    displayName: 'Run Integration Tests'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - checkout: self
+      displayName: 'Checkout Repository'
+
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init - Integration Tests'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: 'tests'
+        backendServiceArm: 'terraform-backend'
+        backendAzureRmResourceGroupName: $(resourceGroupName)
+        backendAzureRmStorageAccountName: $(storageAccountName)
+        backendAzureRmContainerName: $(containerName)
+        backendAzureRmKey: 'integration-tests.tfstate'
+
+    - task: Bash@3
+      displayName: 'Run Integration Tests'
+      inputs:
+        targetType: 'inline'
+        script: |
+          terraform test
+        workingDirectory: 'tests'
+      env:
+        ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+        ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+        ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+        ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+    - task: Bash@3
+      displayName: 'Cleanup Test Resources'
+      condition: always()
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "Cleaning up test resources..."
+          # Add cleanup commands here if needed
+          # terraform destroy -auto-approve
+        workingDirectory: 'tests'
+
+- stage: Documentation
+  displayName: 'Generate Documentation'
+  dependsOn: Validation
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - job: GenerateDocs
+    displayName: 'Generate Module Documentation'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - checkout: self
+      displayName: 'Checkout Repository'
+
+    - task: Bash@3
+      displayName: 'Install terraform-docs'
+      inputs:
+        targetType: 'inline'
+        script: |
+          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.16.0/terraform-docs-v0.16.0-$(uname)-amd64.tar.gz
+          tar -xzf terraform-docs.tar.gz
+          chmod +x terraform-docs
+          sudo mv terraform-docs /usr/local/bin/
+
+    - task: Bash@3
+      displayName: 'Generate Documentation'
+      inputs:
+        targetType: 'inline'
+        script: |
+          for module in azure/*/; do
+            if [ -d "$module" ]; then
+              echo "Generating documentation for $module"
+              terraform-docs markdown table --output-file README.md --output-mode inject "$module"
+            fi
+          done
+
+    - task: Bash@3
+      displayName: 'Check for Documentation Changes'
+      inputs:
+        targetType: 'inline'
+        script: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "Documentation changes detected"
+            git config --global user.email "azure-devops@example.com"
+            git config --global user.name "Azure DevOps"
+            git add .
+            git commit -m "docs: Update module documentation [skip ci]"
+            git push origin HEAD:$(Build.SourceBranchName)
+          else
+            echo "No documentation changes"
+          fi
+
+- stage: Notification
+  displayName: 'Send Notifications'
+  dependsOn: [Validation, SecurityScan, TerraformPlan, IntegrationTests, Documentation]
+  condition: always()
+  jobs:
+  - job: SendNotifications
+    displayName: 'Send Teams Notification'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - task: InvokeRESTAPI@1
+      displayName: 'Send Teams Notification'
+      inputs:
+        connectionType: 'connectedServiceName'
+        serviceConnection: 'teams-webhook'
+        method: 'POST'
+        headers: |
+          Content-Type: application/json
+        body: |
+          {
+            "@type": "MessageCard",
+            "@context": "http://schema.org/extensions",
+            "themeColor": "$(if $(eq(variables['Agent.JobStatus'], 'Succeeded')), '00FF00', 'FF0000')",
+            "summary": "Terraform Pipeline Status",
+            "sections": [{
+              "activityTitle": "Terraform Module Tests",
+              "activitySubtitle": "Repository: $(Build.Repository.Name)",
+              "facts": [{
+                "name": "Branch",
+                "value": "$(Build.SourceBranchName)"
+              }, {
+                "name": "Build Number",
+                "value": "$(Build.BuildNumber)"
+              }, {
+                "name": "Status",
+                "value": "$(Agent.JobStatus)"
+              }, {
+                "name": "Triggered By",
+                "value": "$(Build.RequestedFor)"
+              }],
+              "markdown": true
+            }]
+          }
+      condition: always()
