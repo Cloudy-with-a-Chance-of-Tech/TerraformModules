@@ -170,23 +170,23 @@ jobs:
         echo "Cleaning up test resources..."
         # Add cleanup commands here if needed
 
-  notify-teams:
-    name: Notify Teams
-    runs-on: ubuntu-latest
-    needs: [terraform-validation, terraform-security-scan, terraform-plan, integration-tests]
-    if: always() && (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    
-    steps:
-    - name: Send Teams Notification
-      uses: aliencube/microsoft-teams-actions@v0.8.0
-      with:
-        webhook_uri: ${{ secrets.TEAMS_WEBHOOK_URI }}
-        title: "Terraform Tests Completed"
-        summary: "Terraform module tests have completed for ${{ github.repository }}"
-        text: |
-          **Repository:** ${{ github.repository }}
-          **Branch:** ${{ github.ref_name }}
-          **Commit:** ${{ github.sha }}
-          **Status:** ${{ job.status }}
-          **Triggered by:** ${{ github.actor }}
-        theme_color: ${{ job.status == 'success' && '00FF00' || 'FF0000' }}
+  # TODO: Configure Home Assistant webhook for notifications
+  # notify-homeassistant:
+  #   name: Notify Home Assistant
+  #   runs-on: ubuntu-latest
+  #   needs: [terraform-validation, terraform-security-scan, terraform-plan, integration-tests]
+  #   if: always() && (github.event_name == 'push' && github.ref == 'refs/heads/main')
+  #   
+  #   steps:
+  #   - name: Send Home Assistant Notification
+  #     run: |
+  #       curl -X POST "${{ secrets.HOMEASSISTANT_WEBHOOK_URL }}" \
+  #         -H "Content-Type: application/json" \
+  #         -d '{
+  #           "repository": "${{ github.repository }}",
+  #           "branch": "${{ github.ref_name }}",
+  #           "commit": "${{ github.sha }}",
+  #           "status": "${{ job.status }}",
+  #           "actor": "${{ github.actor }}",
+  #           "title": "Terraform Tests Completed"
+  #         }'

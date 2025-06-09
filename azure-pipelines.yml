@@ -292,42 +292,41 @@ stages:
   dependsOn: [Validation, SecurityScan, TerraformPlan, IntegrationTests, Documentation]
   condition: always()
   jobs:
-  - job: SendNotifications
-    displayName: 'Send Teams Notification'
+  # TODO: Configure Home Assistant webhook for notifications
+  # - job: SendNotifications
+  #   displayName: 'Send Home Assistant Notification'
+  #   pool:
+  #     vmImage: $(vmImage)
+  #   steps:
+  #   - task: Bash@3
+  #     displayName: 'Send Home Assistant Notification'
+  #     inputs:
+  #       targetType: 'inline'
+  #       script: |
+  #         curl -X POST "$(HOMEASSISTANT_WEBHOOK_URL)" \
+  #           -H "Content-Type: application/json" \
+  #           -d '{
+  #             "repository": "$(Build.Repository.Name)",
+  #             "branch": "$(Build.SourceBranchName)",
+  #             "buildNumber": "$(Build.BuildNumber)",
+  #             "status": "$(Agent.JobStatus)",
+  #             "triggeredBy": "$(Build.RequestedFor)",
+  #             "title": "Terraform Pipeline Completed"
+  #           }'
+  #     condition: always()
+  
+  # Placeholder job to keep stage structure
+  - job: PlaceholderNotification
+    displayName: 'Notification Placeholder'
     pool:
       vmImage: $(vmImage)
     steps:
-    - task: InvokeRESTAPI@1
-      displayName: 'Send Teams Notification'
+    - task: Bash@3
+      displayName: 'Pipeline Complete'
       inputs:
-        connectionType: 'connectedServiceName'
-        serviceConnection: 'teams-webhook'
-        method: 'POST'
-        headers: |
-          Content-Type: application/json
-        body: |
-          {
-            "@type": "MessageCard",
-            "@context": "http://schema.org/extensions",
-            "themeColor": "$(if $(eq(variables['Agent.JobStatus'], 'Succeeded')), '00FF00', 'FF0000')",
-            "summary": "Terraform Pipeline Status",
-            "sections": [{
-              "activityTitle": "Terraform Module Tests",
-              "activitySubtitle": "Repository: $(Build.Repository.Name)",
-              "facts": [{
-                "name": "Branch",
-                "value": "$(Build.SourceBranchName)"
-              }, {
-                "name": "Build Number",
-                "value": "$(Build.BuildNumber)"
-              }, {
-                "name": "Status",
-                "value": "$(Agent.JobStatus)"
-              }, {
-                "name": "Triggered By",
-                "value": "$(Build.RequestedFor)"
-              }],
-              "markdown": true
-            }]
-          }
-      condition: always()
+        targetType: 'inline'
+        script: |
+          echo "Pipeline completed successfully!"
+          echo "Repository: $(Build.Repository.Name)"
+          echo "Branch: $(Build.SourceBranchName)"
+          echo "Status: $(Agent.JobStatus)"
