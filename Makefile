@@ -68,7 +68,7 @@ load-env: check-env
 ## validate: Validate Terraform configuration
 validate: load-env
 	@echo "$(GREEN)Validating Terraform configuration...$(NC)"
-	@source $(ENV_FILE) && terraform validate
+	@bash -c "source $(ENV_FILE) && terraform validate"
 
 ## fmt: Format Terraform files
 fmt:

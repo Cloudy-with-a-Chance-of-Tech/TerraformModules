@@ -113,10 +113,10 @@ run "test_valid_flow_timeout" {
   command = plan
 
   variables {
-    resource_group_name      = "rg-vnet-test"
-    virtual_network_name     = "test-flow-timeout"
-    location                 = "East US"
-    flow_timeout_in_minutes  = 10  # Valid value
+    resource_group_name     = "rg-vnet-test"
+    virtual_network_name    = "test-flow-timeout"
+    location                = "East US"
+    flow_timeout_in_minutes = 10 # Valid value
   }
 
   assert {
@@ -127,26 +127,26 @@ run "test_valid_flow_timeout" {
 
 # Test validation fails for invalid flow timeout (too low)
 run "test_invalid_flow_timeout_low" {
-  command = plan
+  command         = plan
   expect_failures = [var.flow_timeout_in_minutes]
 
   variables {
-    resource_group_name      = "rg-vnet-test"
-    virtual_network_name     = "test-invalid-low"
-    location                 = "East US"
-    flow_timeout_in_minutes  = 2  # Invalid - too low
+    resource_group_name     = "rg-vnet-test"
+    virtual_network_name    = "test-invalid-low"
+    location                = "East US"
+    flow_timeout_in_minutes = 2 # Invalid - too low
   }
 }
 
 # Test validation fails for invalid flow timeout (too high)
 run "test_invalid_flow_timeout_high" {
-  command = plan
+  command         = plan
   expect_failures = [var.flow_timeout_in_minutes]
 
   variables {
-    resource_group_name      = "rg-vnet-test"
-    virtual_network_name     = "test-invalid-high"
-    location                 = "East US"
-    flow_timeout_in_minutes  = 35  # Invalid - too high
+    resource_group_name     = "rg-vnet-test"
+    virtual_network_name    = "test-invalid-high"
+    location                = "East US"
+    flow_timeout_in_minutes = 35 # Invalid - too high
   }
 }
