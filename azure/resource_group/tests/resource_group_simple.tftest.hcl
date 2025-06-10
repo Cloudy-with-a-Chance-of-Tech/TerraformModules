@@ -1,5 +1,18 @@
 # Test file for resource group module
 
+# Provider configuration for tests
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+  skip_provider_registration = true
+
+  # Use service principal authentication from environment variables
+  use_oidc = false
+}
+
 # Test minimal configuration
 run "test_minimal_resource_group" {
   command = plan
@@ -15,7 +28,7 @@ run "test_minimal_resource_group" {
   }
 
   assert {
-    condition     = azurerm_resource_group.this.location == "East US"
+    condition     = azurerm_resource_group.this.location == "eastus"
     error_message = "Resource group location should match input"
   }
 }

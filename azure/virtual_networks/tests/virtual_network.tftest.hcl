@@ -1,3 +1,16 @@
+# Provider configuration for tests
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+  skip_provider_registration = true
+
+  # Use service principal authentication from environment variables
+  use_oidc = false
+}
+
 # Test with minimal configuration
 run "test_minimal_virtual_network" {
   command = plan

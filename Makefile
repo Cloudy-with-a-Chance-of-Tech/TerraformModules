@@ -78,22 +78,22 @@ fmt:
 ## init: Initialize Terraform with environment variables
 init: load-env
 	@echo "$(GREEN)Initializing Terraform...$(NC)"
-	@source $(ENV_FILE) && terraform init
+	@bash -c "source $(ENV_FILE) && terraform init"
 
 ## plan: Run Terraform plan with environment variables
 plan: load-env
 	@echo "$(GREEN)Running Terraform plan...$(NC)"
-	@source $(ENV_FILE) && terraform plan
+	@bash -c "source $(ENV_FILE) && terraform plan"
 
 ## apply: Run Terraform apply with environment variables
 apply: load-env
 	@echo "$(GREEN)Running Terraform apply...$(NC)"
-	@source $(ENV_FILE) && terraform apply
+	@bash -c "source $(ENV_FILE) && terraform apply"
 
 ## destroy: Run Terraform destroy with environment variables
 destroy: load-env
 	@echo "$(YELLOW)Running Terraform destroy...$(NC)"
-	@source $(ENV_FILE) && terraform destroy
+	@bash -c "source $(ENV_FILE) && terraform destroy"
 
 ## clean: Clean Terraform files and state
 clean:
@@ -108,12 +108,12 @@ clean:
 ## test-rg: Test resource group module
 test-rg: load-env
 	@echo "$(GREEN)Testing resource group module...$(NC)"
-	@cd azure/resource_group && source $(ENV_FILE) && terraform test
+	@cd azure/resource_group && bash -c "source ../../.env && terraform test"
 
 ## test-vnet: Test virtual network module
 test-vnet: load-env
 	@echo "$(GREEN)Testing virtual network module...$(NC)"
-	@cd azure/virtual_networks && source $(ENV_FILE) && terraform test
+	@cd azure/virtual_networks && bash -c "source ../../.env && terraform test"
 
 ## test-vm: Test Windows compute module
 test-vm: load-env
@@ -124,44 +124,44 @@ test-vm: load-env
 ## init-rg: Initialize resource group module
 init-rg: load-env
 	@echo "$(GREEN)Initializing resource group module...$(NC)"
-	@cd azure/resource_group && source $(ENV_FILE) && terraform init
+	@cd azure/resource_group && bash -c "source ../../.env && terraform init"
 
 ## plan-rg: Plan resource group module
 plan-rg: load-env
 	@echo "$(GREEN)Planning resource group module...$(NC)"
-	@cd azure/resource_group && source $(ENV_FILE) && terraform plan
+	@cd azure/resource_group && bash -c "source ../../.env && terraform plan"
 
 ## apply-rg: Apply resource group module
 apply-rg: load-env
 	@echo "$(GREEN)Applying resource group module...$(NC)"
-	@cd azure/resource_group && source $(ENV_FILE) && terraform apply
+	@cd azure/resource_group && bash -c "source ../../.env && terraform apply"
 
 ## init-vnet: Initialize virtual network module
 init-vnet: load-env
 	@echo "$(GREEN)Initializing virtual network module...$(NC)"
-	@cd azure/virtual_networks && source $(ENV_FILE) && terraform init
+	@cd azure/virtual_networks && bash -c "source ../../.env && terraform init"
 
 ## plan-vnet: Plan virtual network module
 plan-vnet: load-env
 	@echo "$(GREEN)Planning virtual network module...$(NC)"
-	@cd azure/virtual_networks && source $(ENV_FILE) && terraform plan
+	@cd azure/virtual_networks && bash -c "source ../../.env && terraform plan"
 
 ## apply-vnet: Apply virtual network module
 apply-vnet: load-env
 	@echo "$(GREEN)Applying virtual network module...$(NC)"
-	@cd azure/virtual_networks && source $(ENV_FILE) && terraform apply
+	@cd azure/virtual_networks && bash -c "source ../../.env && terraform apply"
 
 ## init-vm: Initialize Windows compute module
 init-vm: load-env
 	@echo "$(GREEN)Initializing Windows compute module...$(NC)"
-	@cd azure/win_compute && source $(ENV_FILE) && terraform init
+	@cd azure/win_compute && bash -c "source ../../.env && terraform init"
 
 ## plan-vm: Plan Windows compute module
 plan-vm: load-env
 	@echo "$(GREEN)Planning Windows compute module...$(NC)"
-	@cd azure/win_compute && source $(ENV_FILE) && terraform plan
+	@cd azure/win_compute && bash -c "source ../../.env && terraform plan"
 
 ## apply-vm: Apply Windows compute module
 apply-vm: load-env
 	@echo "$(GREEN)Applying Windows compute module...$(NC)"
-	@cd azure/win_compute && source $(ENV_FILE) && terraform apply
+	@cd azure/win_compute && bash -c "source ../../.env && terraform apply"
