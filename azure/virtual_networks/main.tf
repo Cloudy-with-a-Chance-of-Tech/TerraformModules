@@ -8,7 +8,7 @@ resource "azurerm_virtual_network" "this" {
   location            = var.location
   resource_group_name = var.resource_group_name
   address_space       = var.address_space
-  dns_servers         = length(var.dns_servers) > 0 ? var.dns_servers : null
+  dns_servers         = var.dns_servers
 
   # Optional configurations
   bgp_community           = var.bgp_community
