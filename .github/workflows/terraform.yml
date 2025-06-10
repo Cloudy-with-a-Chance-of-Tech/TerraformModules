@@ -9,6 +9,11 @@ on:
       - 'gcp/**'
       - 'tests/**'
       - '.github/workflows/**'
+      - 'Makefile'
+      - 'providers.tf'
+      - 'variables.tf'
+      - 'scripts/**'
+      - '*.md'
   pull_request:
     branches: [ main ]
     paths:
@@ -16,6 +21,10 @@ on:
       - 'aws/**'
       - 'gcp/**'
       - 'tests/**'
+      - 'Makefile'
+      - 'providers.tf'
+      - 'variables.tf'
+      - 'scripts/**'
 
 env:
   TERRAFORM_VERSION: 1.6.0
