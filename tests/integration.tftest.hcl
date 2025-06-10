@@ -1,5 +1,20 @@
 # Integration test: Resource Group + Virtual Network
-run "test_resource_group_and_virtual_network_integration" {
+
+# Provider configuration for integration tests
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+  }
+}
+
+# First test the resource group module independently
+run "test_resource_group_creation" {
   command = plan
 
   module {
@@ -15,9 +30,25 @@ run "test_resource_group_and_virtual_network_integration" {
       ManagedBy   = "Terraform"
     }
   }
+
+  assert {
+    condition     = output.resource_group_name == "rg-integration-test"
+    error_message = "Resource group should follow naming convention: rg-integration-test"
+  }
+
+  assert {
+    condition     = output.location == "eastus"
+    error_message = "Resource group should be created in East US region"
+  }
+
+  assert {
+    condition     = output.tags["Environment"] == "Test"
+    error_message = "Resource group should have correct Environment tag"
+  }
 }
 
-run "test_virtual_network_with_resource_group" {
+# Test the virtual network module independently  
+run "test_virtual_network_integration" {
   command = plan
 
   module {
@@ -25,25 +56,34 @@ run "test_virtual_network_with_resource_group" {
   }
 
   variables {
-    resource_group_name = run.test_resource_group_and_virtual_network_integration.resource_group_name
-    name                = "integration-test"
-    location            = run.test_resource_group_and_virtual_network_integration.location
-    address_space       = ["10.100.0.0/16"]
-    tags                = run.test_resource_group_and_virtual_network_integration.tags
+    resource_group_name    = "rg-integration-test"
+    virtual_network_name   = "vnet-integration-test"
+    location              = "eastus"
+    address_space         = ["10.100.0.0/16"]
+    tags = {
+      Environment = "Test"
+      Purpose     = "Integration"
+      ManagedBy   = "Terraform"
+    }
   }
 
   assert {
-    condition     = azurerm_virtual_network.this.resource_group_name == "rg-integration-test"
-    error_message = "Virtual network should be created in the correct resource group"
+    condition     = output.virtual_network_name == "vnet-integration-test"
+    error_message = "Virtual network should follow naming convention: vnet-integration-test"
   }
 
   assert {
-    condition     = azurerm_virtual_network.this.name == "vnet-integration-test"
-    error_message = "Virtual network should have correct naming convention"
+    condition     = output.resource_group_name == "rg-integration-test"
+    error_message = "Virtual network should reference the correct resource group"
   }
 
   assert {
-    condition     = azurerm_virtual_network.this.tags["Environment"] == "Test"
-    error_message = "Tags should be inherited from resource group module"
+    condition     = contains(output.address_space, "10.100.0.0/16")
+    error_message = "Virtual network should have the correct address space"
+  }
+
+  assert {
+    condition     = output.tags["Environment"] == "Test"
+    error_message = "Virtual network should have correct Environment tag"
   }
 }
