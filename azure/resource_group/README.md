@@ -195,3 +195,44 @@ When contributing to this module, please ensure:
 ## License
 
 This module is open source and available in the [TerraformModules](https://github.com/Cloudy-with-a-Chance-of-Tech/TerraformModules) repository. Please follow the repository's license terms for usage and modification.
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.6.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_location"></a> [location](#input\_location) | The Azure region where the resource group will be created. | `string` | `"southcentralus"` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group to create. If the name doesn't start with 'rg-', it will be automatically prepended. | `string` | `"rg-default-name"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resource group. | `map(string)` | <pre>{<br>  "ManagedBy": "Terraform"<br>}</pre> | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_location"></a> [location](#output\_location) | The Azure region where the resource group is located |
+| <a name="output_resource_group_id"></a> [resource\_group\_id](#output\_resource\_group\_id) | The ID of the resource group |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the resource group |
+| <a name="output_tags"></a> [tags](#output\_tags) | The tags assigned to the resource group |
+<!-- END_TF_DOCS -->
