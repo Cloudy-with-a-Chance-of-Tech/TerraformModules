@@ -44,7 +44,7 @@ variable "address_space" {
 variable "dns_servers" {
   description = "List of IP addresses of DNS servers for the virtual network. If empty, uses Azure's default DNS (168.63.129.16)."
   type        = list(string)
-  default     = ["168.63.129.16"]  # Azure's default DNS server for better security compliance
+  default     = ["168.63.129.16"] # Azure's default DNS server for better security compliance
 }
 
 variable "bgp_community" {
