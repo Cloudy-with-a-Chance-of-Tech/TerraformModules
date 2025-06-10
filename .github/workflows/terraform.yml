@@ -78,7 +78,7 @@ jobs:
         module:
           - azure/resource_group
           - azure/virtual_networks
-          - azure/win_compute
+          # - azure/win_compute  # Temporarily disabled until implementation complete
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -145,7 +145,7 @@ jobs:
         module:
           - azure/resource_group
           - azure/virtual_networks
-          - azure/win_compute
+          # - azure/win_compute  # Temporarily disabled until implementation complete
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

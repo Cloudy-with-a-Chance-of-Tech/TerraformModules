@@ -74,7 +74,7 @@ variable "flow_timeout_in_minutes" {
   default     = null
 
   validation {
-    condition     = var.flow_timeout_in_minutes == null || (var.flow_timeout_in_minutes >= 4 && var.flow_timeout_in_minutes <= 30)
+    condition     = var.flow_timeout_in_minutes == null || (var.flow_timeout_in_minutes != null && var.flow_timeout_in_minutes >= 4 && var.flow_timeout_in_minutes <= 30)
     error_message = "Flow timeout must be between 4 and 30 minutes."
   }
 }
