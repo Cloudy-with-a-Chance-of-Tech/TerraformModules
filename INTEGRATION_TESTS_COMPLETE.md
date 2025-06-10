@@ -15,33 +15,29 @@
 ## 🔧 CHANGES MADE
 
 ### `/tests/integration.tftest.hcl`
-- Added Azure provider configuration with features block
+- Added Azure provider configuration with features block (removed for CI/CD compatibility)
 - Fixed variable name from `name` to `virtual_network_name` for virtual networks module
 - Maintained comprehensive assertions for both modules
+- Configured to run from root directory in CI/CD pipeline
 
-### Provider Configuration Added:
-```terraform
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    key_vault {
-      purge_soft_delete_on_destroy    = true
-      recover_soft_deleted_key_vaults = true
-    }
-  }
-}
+### CI/CD Pipeline Fix:
+```yaml
+# Changed from:
+working-directory: tests
+run: |
+  terraform init
+  terraform test
+
+# To:
+run: |
+  terraform init
+  terraform test tests/integration.tftest.hcl
 ```
 
-### Variable Fix:
-```terraform
-# OLD (causing error):
-name = "integration-test"
-
-# NEW (working):
-virtual_network_name = "vnet-integration-test"
-```
+### Provider Configuration:
+- Removed provider block from integration test to prevent conflicts
+- Integration tests now inherit provider configuration from root `providers.tf`
+- Ensures compatibility with CI/CD pipeline execution
 
 ## 📊 COMPREHENSIVE TEST STATUS
 
