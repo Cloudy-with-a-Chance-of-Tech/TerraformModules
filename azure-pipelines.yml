@@ -44,6 +44,16 @@ stages:
     - checkout: self
       displayName: 'Checkout Repository'
 
+    - bash: |
+        chmod +x scripts/*.sh
+        ./scripts/pipeline-env.sh
+      displayName: 'Validate Pipeline Environment'
+      env:
+        ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+        ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+        ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+        ARM_TENANT_ID: $(ARM_TENANT_ID)
+
     - task: TerraformInstaller@0
       displayName: 'Install Terraform'
       inputs:

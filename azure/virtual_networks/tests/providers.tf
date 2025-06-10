@@ -1,4 +1,6 @@
-# Provider configuration for testing
+# Test provider configuration
+# This inherits from the root provider configuration but can override settings for testing
+
 terraform {
   required_providers {
     azurerm = {
@@ -9,14 +11,12 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 
-  # Use environment variables for authentication:
-  # ARM_SUBSCRIPTION_ID
-  # ARM_CLIENT_ID
-  # ARM_CLIENT_SECRET  
-  # ARM_TENANT_ID
-
-  # For local testing without credentials, you can skip provider registration
+  # Skip provider registration for faster testing
   skip_provider_registration = true
 }
